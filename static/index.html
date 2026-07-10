@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0F1629;
+    --card:    #1C2540;
+    --border:  #2A3352;
+    --text:    #E8ECF4;
+    --muted:   #8892A4;
+    --teal:    #00D4AA;
+    --red:     #FF6B6B;
+    --font:    'Inter', sans-serif;
+    --head:    'Space Grotesk', sans-serif;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* ── Topbar ── */
+  #topbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 0 1.25rem; height: 54px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #topbar .logo { font-family: var(--head); font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  #topbar .logo span { font-size: 20px; }
+  #user-info { display: flex; align-items: center; gap: 12px; }
+  #user-email { color: var(--muted); font-size: 13px; }
+
+  /* ── Layout ── */
+  #main { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+  /* ── Auth ── */
+  #auth-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .auth-box {
+    width: 100%; max-width: 380px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem;
+  }
+  .auth-logo { text-align: center; margin-bottom: 2rem; }
+  .auth-logo .icon { font-size: 30px; }
+  .auth-logo h1 { font-family: var(--head); font-size: 24px; font-weight: 700; margin-top: 6px; letter-spacing: -0.03em; }
+  .auth-logo p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* ── Form elements ── */
+  label.field-label {
+    display: block; color: var(--muted); font-size: 11px;
+    font-family: var(--head); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px;
+  }
+  input, select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.6rem 0.8rem; color: var(--text);
+    font-size: 14px; font-family: var(--font); outline: none;
+    transition: border-color 0.2s; appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--teal); }
+  .field { margin-bottom: 1rem; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+
+  /* ── Buttons ── */
+  button { cursor: pointer; font-family: var(--font); border: none; border-radius: 8px; font-size: 14px; transition: opacity 0.15s, transform 0.1s; }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: var(--teal); color: var(--bg); font-weight: 700; padding: 0.65rem 1.2rem; }
+  .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 0.65rem 1.2rem; }
+  .btn-danger { background: #FF6B6B22; color: var(--red); border: 1px solid #FF6B6B44; padding: 0.65rem 1.2rem; }
+  .btn-full { width: 100%; }
+  .btn-sm { padding: 0.35rem 0.7rem; font-size: 13px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Alert ── */
+  .alert {
+    border-radius: 8px; padding: 0.7rem 1rem; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1rem;
+  }
+  .alert.error { background: #FF6B6B22; border: 1px solid var(--red); color: var(--red); }
+  .alert.success { background: #00D4AA22; border: 1px solid var(--teal); color: var(--teal); }
+  .alert-close { background: none; border: none; font-size: 18px; line-height: 1; padding: 0; }
+
+  /* ── Auth toggle link ── */
+  .auth-switch { text-align: center; color: var(--muted); font-size: 13px; margin-top: 1.25rem; }
+  .auth-switch a { color: var(--teal); cursor: pointer; text-decoration: none; }
+
+  /* ── Month stat ── */
+  #month-stat {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 0.9rem 1.25rem; margin-bottom: 1.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #month-stat .label { color: var(--muted); font-size: 13px; }
+  #month-stat .value { font-family: var(--head); font-weight: 700; font-size: 18px; }
+  #month-stat .sub { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 6px; }
+
+  /* ── Breakdown bar ── */
+  #breakdown { margin-bottom: 2rem; }
+  #breakdown-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; }
+  #breakdown-header .label { color: var(--muted); font-size: 11px; font-family: var(--head); letter-spacing: 0.08em; text-transform: uppercase; }
+  #breakdown-header .total { font-family: var(--head); font-weight: 700; font-size: 20px; }
+  #breakdown-bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; gap: 1px; }
+  #breakdown-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 0.75rem; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-name { color: var(--muted); }
+  .legend-amt { color: var(--text); font-weight: 600; }
+
+  /* ── Controls ── */
+  #controls { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  #controls input { flex: 1; min-width: 140px; }
+  #controls select { width: auto; min-width: 120px; padding-right: 1.8rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238892A4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; }
+
+  /* ── Expense form card ── */
+  #expense-form-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.5rem; margin-bottom: 1.5rem; display: none;
+  }
+  #expense-form-card h3 { font-family: var(--head); font-size: 16px; margin-bottom: 1.25rem; }
+  .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+  /* ── Expense list ── */
+  #expense-list {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .expense-row {
+    display: flex; align-items: center; padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--bg); gap: 0.75rem; transition: background 0.15s;
+  }
+  .expense-row:last-child { border-bottom: none; }
+  .expense-row:hover { background: #1C254088; }
+  .cat-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cat-dot { width: 10px; height: 10px; border-radius: 3px; }
+  .exp-info { flex: 1; min-width: 0; }
+  .exp-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .exp-sub .cat-tag { font-weight: 600; }
+  .exp-amount { color: var(--red); font-weight: 700; font-family: var(--head); font-size: 15px; flex-shrink: 0; }
+  .exp-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .exp-actions button { background: none; border: none; padding: 4px 6px; border-radius: 6px; font-size: 14px; }
+  .btn-edit { color: var(--muted); }
+  .btn-edit:hover { color: var(--teal); }
+  .btn-del { color: #FF6B6B44; }
+  .btn-del:hover { color: var(--red); }
+
+  /* ── Empty state ── */
+  #empty-state { padding: 3rem; text-align: center; color: var(--muted); display: none; }
+  #empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+  #empty-state p { font-size: 15px; }
+
+  /* ── Footer count ── */
+  #list-count { color: var(--muted); font-size: 12px; text-align: center; margin-top: 1rem; }
+
+  /* ── Spinner ── */
+  .spinner {
+    width: 28px; height: 28px; border: 3px solid var(--border);
+    border-top-color: var(--teal); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 2rem auto; display: block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="icon">◈</div>
+      <h1>Expense Tracker</h1>
+      <p id="auth-subtitle">Sign in to your account</p>
+    </div>
+
+    <div id="auth-alert" class="alert error hidden"></div>
+
+    <div class="field" id="name-field" style="display:none">
+      <label class="field-label">Full Name</label>
+      <input type="text" id="input-name" placeholder="Nuel Doe">
+    </div>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input type="email" id="input-email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <input type="password" id="input-password" placeholder="••••••••">
+    </div>
+
+    <button class="btn-primary btn-full" id="auth-btn" onclick="handleAuth()">Sign In</button>
+
+    <p class="auth-switch">
+      <span id="auth-switch-text">No account? </span>
+      <a onclick="toggleAuthMode()"><span id="auth-switch-link">Sign up</span></a>
+    </p>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard" class="hidden">
+
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="logo"><span>◈</span> Expense Tracker</div>
+    <div id="user-info">
+      <span id="user-email"></span>
+      <button class="btn-secondary btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="dash-alert" class="alert error hidden"></div>
+
+    <!-- Month stat -->
+    <div id="month-stat" class="hidden">
+      <span class="label">This month</span>
+      <span>
+        <span class="value" id="month-total"></span>
+        <span class="sub" id="month-count"></span>
+      </span>
+    </div>
+
+    <!-- Breakdown bar -->
+    <div id="breakdown" class="hidden">
+      <div id="breakdown-header">
+        <span class="label">Spending Breakdown</span>
+        <span class="total" id="breakdown-total"></span>
+      </div>
+      <div id="breakdown-bar"></div>
+      <div id="breakdown-legend"></div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+      <input type="text" id="search-input" placeholder="Search expenses..." oninput="renderList()">
+      <select id="cat-filter" onchange="renderList()">
+        <option value="All">All Categories</option>
+        <option>Food</option>
+        <option>Transport</option>
+        <option>Housing</option>
+        <option>Entertainment</option>
+        <option>Health</option>
+        <option>Shopping</option>
+        <option>Education</option>
+        <option>Other</option>
+      </select>
+      <button class="btn-primary" onclick="openForm()">+ Add Expense</button>
+    </div>
+
+    <!-- Expense form -->
+    <div id="expense-form-card">
+      <h3 id="form-title">Add Expense</h3>
+      <div id="form-alert" class="alert error hidden"></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Amount (₦)</label>
+          <input type="number" id="f-amount" placeholder="0.00" min="0.01" step="0.01">
+        </div>
+        <div class="field">
+          <label class="field-label">Category</label>
+          <select id="f-category" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%238892A4%27 stroke-width=%271.5%27 fill=%27none%27 stroke-linecap=%27round%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 10px center; padding-right: 1.8rem;">
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Housing</option>
+            <option>Entertainment</option>
+            <option>Health</option>
+            <option>Shopping</option>
+            <option>Education</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Description (optional)</label>
+        <input type="text" id="f-description" placeholder="What was this for?">
+      </div>
+      <div class="field">
+        <label class="field-label">Date</label>
+        <input type="date" id="f-date">
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="closeForm()">Cancel</button>
+        <button class="btn-primary" id="form-submit-btn" onclick="submitExpense()">Add Expense</button>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="expense-list">
+      <div class="spinner" id="list-spinner"></div>
+      <div id="empty-state">
+        <div class="icon">◎</div>
+        <p id="empty-msg">No expenses yet. Add your first one above.</p>
+      </div>
+    </div>
+    <p id="list-count" class="hidden"></p>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const API = 'http://127.0.0.1:8000/api/v1';
+
+const CAT_COLORS = {
+  Food:          '#00D4AA',
+  Transport:     '#4F8EF7',
+  Housing:       '#A78BFA',
+  Entertainment: '#F59E0B',
+  Health:        '#34D399',
+  Shopping:      '#FB7185',
+  Education:     '#60A5FA',
+  Other:         '#8892A4',
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let token = sessionStorage.getItem('et_token') || null;
+let userEmail = sessionStorage.getItem('et_email') || '';
+let expenses = [];
+let editingId = null;
+let authMode = 'login';
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  if (token) showDashboard();
+  else showAuth();
+  // Set today as default date
+  document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+};
+
+// ── Auth helpers ─────────────────────────────────────────────────────────────
+function showAuth() {
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+}
+
+function showDashboard() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  document.getElementById('user-email').textContent = userEmail;
+  fetchExpenses();
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  const isReg = authMode === 'register';
+  document.getElementById('auth-subtitle').textContent = isReg ? 'Create a new account' : 'Sign in to your account';
+  document.getElementById('auth-btn').textContent = isReg ? 'Create Account' : 'Sign In';
+  document.getElementById('auth-switch-text').textContent = isReg ? 'Already have one? ' : 'No account? ';
+  document.getElementById('auth-switch-link').textContent = isReg ? 'Sign in' : 'Sign up';
+  document.getElementById('name-field').style.display = isReg ? 'block' : 'none';
+  hideAlert('auth-alert');
+}
+
+async function handleAuth() {
+  const email = document.getElementById('input-email').value.trim();
+  const password = document.getElementById('input-password').value;
+  const name = document.getElementById('input-name').value.trim();
+  if (!email || !password) { showAlert('auth-alert', 'Please fill in all fields.'); return; }
+
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true; btn.textContent = '...';
+
+  try {
+    if (authMode === 'register') {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, full_name: name }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Registration failed'); }
+      toggleAuthMode();
+      showAlert('auth-alert', 'Account created! Please sign in.', 'success');
+    } else {
+      const body = new URLSearchParams({ username: email, password });
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Login failed'); }
+      const data = await res.json();
+      token = data.access_token;
+      userEmail = email;
+      sessionStorage.setItem('et_token', token);
+      sessionStorage.setItem('et_email', email);
+      showDashboard();
+    }
+  } catch (e) {
+    showAlert('auth-alert', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+  }
+}
+
+function logout() {
+  token = null; userEmail = ''; expenses = [];
+  sessionStorage.removeItem('et_token');
+  sessionStorage.removeItem('et_email');
+  showAuth();
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers },
+  });
+  if (res.status === 204) return null;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Request failed');
+  return data;
+}
+
+// ── Expenses ──────────────────────────────────────────────────────────────────
+async function fetchExpenses() {
+  document.getElementById('list-spinner').style.display = 'block';
+  document.getElementById('empty-state').style.display = 'none';
+  try {
+    expenses = await apiFetch('/expenses/?limit=200');
+    renderStats();
+    renderList();
+  } catch (e) {
+    showAlert('dash-alert', e.message);
+  } finally {
+    document.getElementById('list-spinner').style.display = 'none';
+  }
+}
+
+function renderStats() {
+  // Month stat
+  const now = new Date();
+  const thisMonth = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const monthStat = document.getElementById('month-stat');
+  if (thisMonth.length > 0) {
+    const total = thisMonth.reduce((s, e) => s + e.amount, 0);
+    document.getElementById('month-total').textContent = `₦${total.toLocaleString()}`;
+    document.getElementById('month-count').textContent = `across ${thisMonth.length} expense${thisMonth.length !== 1 ? 's' : ''}`;
+    monthStat.classList.remove('hidden');
+  } else {
+    monthStat.classList.add('hidden');
+  }
+
+  // Breakdown bar
+  const breakdown = document.getElementById('breakdown');
+  if (expenses.length === 0) { breakdown.classList.add('hidden'); return; }
+
+  const totals = {};
+  expenses.forEach(e => { totals[e.category] = (totals[e.category] || 0) + e.amount; });
+  const grand = Object.values(totals).reduce((a, b) => a + b, 0);
+  const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+
+  document.getElementById('breakdown-total').textContent = `₦${grand.toLocaleString()}`;
+
+  const bar = document.getElementById('breakdown-bar');
+  bar.innerHTML = sorted.map(([cat, amt]) => {
+    const color = CAT_COLORS[cat] || '#8892A4';
+    const pct = (amt / grand * 100).toFixed(1);
+    return `<div style="width:${pct}%;background:${color};transition:width 0.6s" title="${cat}: ₦${amt.toLocaleString()}"></div>`;
+  }).join('');
+
+  const legend = document.getElementById('breakdown-legend');
+  legend.innerHTML = sorted.map(([cat, amt]) => {
+    const color = CAT_COLORS[cat] || '#8892A4';
+    return `<div class="legend-item">
+      <div class="legend-dot" style="background:${color}"></div>
+      <span class="legend-name">${cat}</span>
+      <span class="legend-amt">₦${amt.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+
+  breakdown.classList.remove('hidden');
+}
+
+function renderList() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+
+  const filtered = expenses.filter(e => {
+    const matchCat = cat === 'All' || e.category === cat;
+    const matchSearch = !search ||
+      (e.description && e.description.toLowerCase().includes(search)) ||
+      e.category.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+
+  const list = document.getElementById('expense-list');
+  const spinner = document.getElementById('list-spinner');
+  const empty = document.getElementById('empty-state');
+  const count = document.getElementById('list-count');
+
+  // Remove old rows (keep spinner and empty state)
+  Array.from(list.querySelectorAll('.expense-row')).forEach(r => r.remove());
+
+  if (filtered.length === 0) {
+    empty.style.display = 'block';
+    document.getElementById('empty-msg').textContent =
+      expenses.length === 0 ? 'No expenses yet. Add your first one above.' : 'No results match your filter.';
+    count.classList.add('hidden');
+  } else {
+    empty.style.display = 'none';
+    filtered.forEach(e => list.appendChild(makeRow(e)));
+    count.textContent = `Showing ${filtered.length} expense${filtered.length !== 1 ? 's' : ''}${cat !== 'All' || search ? ' (filtered)' : ''}`;
+    count.classList.remove('hidden');
+  }
+}
+
+function makeRow(e) {
+  const color = CAT_COLORS[e.category] || '#8892A4';
+  const date = new Date(e.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' });
+  const div = document.createElement('div');
+  div.className = 'expense-row';
+  div.innerHTML = `
+    <div class="cat-icon" style="background:${color}22">
+      <div class="cat-dot" style="background:${color}"></div>
+    </div>
+    <div class="exp-info">
+      <div class="exp-title">${e.description || e.category}</div>
+      <div class="exp-sub">
+        <span class="cat-tag" style="color:${color}">${e.category}</span>
+        <span style="margin:0 6px">·</span>${date}
+      </div>
+    </div>
+    <div class="exp-amount">₦${e.amount.toLocaleString()}</div>
+    <div class="exp-actions">
+      <button class="btn-edit" title="Edit" onclick="openEditForm(${e.id})">✎</button>
+      <button class="btn-del" title="Delete" onclick="deleteExpense(${e.id})">✕</button>
+    </div>`;
+  return div;
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+function openForm() {
+  editingId = null;
+  document.getElementById('form-title').textContent = 'Add Expense';
+  document.getElementById('form-submit-btn').textContent = 'Add Expense';
+  document.getElementById('f-amount').value = '';
+  document.getElementById('f-category').value = 'Food';
+  document.getElementById('f-description').value = '';
+  document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+  hideAlert('form-alert');
+  document.getElementById('expense-form-card').style.display = 'block';
+  document.getElementById('f-amount').focus();
+}
+
+function openEditForm(id) {
+  const e = expenses.find(x => x.id === id);
+  if (!e) return;
+  editingId = id;
+  document.getElementById('form-title').textContent = 'Edit Expense';
+  document.getElementById('form-submit-btn').textContent = 'Save Changes';
+  document.getElementById('f-amount').value = e.amount;
+  document.getElementById('f-category').value = e.category;
+  document.getElementById('f-description').value = e.description || '';
+  document.getElementById('f-date').value = e.date.slice(0, 10);
+  hideAlert('form-alert');
+  document.getElementById('expense-form-card').style.display = 'block';
+  document.getElementById('expense-form-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeForm() {
+  document.getElementById('expense-form-card').style.display = 'none';
+  editingId = null;
+}
+
+async function submitExpense() {
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  const category = document.getElementById('f-category').value;
+  const description = document.getElementById('f-description').value.trim();
+  const date = document.getElementById('f-date').value;
+
+  if (!amount || amount <= 0) { showAlert('form-alert', 'Enter a valid amount greater than 0.'); return; }
+  if (!date) { showAlert('form-alert', 'Please select a date.'); return; }
+
+  const btn = document.getElementById('form-submit-btn');
+  btn.disabled = true; btn.textContent = '...';
+
+  try {
+    const body = JSON.stringify({ amount, category, description, date: new Date(date).toISOString() });
+    if (editingId) {
+      await apiFetch(`/expenses/${editingId}`, { method: 'PUT', body });
+    } else {
+      await apiFetch('/expenses/', { method: 'POST', body });
+    }
+    closeForm();
+    await fetchExpenses();
+  } catch (e) {
+    showAlert('form-alert', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingId ? 'Save Changes' : 'Add Expense';
+  }
+}
+
+async function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  try {
+    await apiFetch(`/expenses/${id}`, { method: 'DELETE' });
+    expenses = expenses.filter(e => e.id !== id);
+    renderStats();
+    renderList();
+  } catch (e) {
+    showAlert('dash-alert', e.message);
+  }
+}
+
+// ── Alert helpers ─────────────────────────────────────────────────────────────
+function showAlert(id, msg, type = 'error') {
+  const el = document.getElementById(id);
+  el.className = `alert ${type}`;
+  el.innerHTML = `<span>${msg}</span><button class="alert-close" onclick="hideAlert('${id}')">×</button>`;
+  el.classList.remove('hidden');
+}
+function hideAlert(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ── Enter key on auth ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('auth-screen').classList.contains('hidden')) {
+    handleAuth();
+  }
+});
+</script>
+</body>
+</html>
