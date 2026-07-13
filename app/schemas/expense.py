@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-
+from typing import Optional
 
 class ExpenseBase(BaseModel):
     amount: float = Field(gt=0)
@@ -15,10 +15,10 @@ class ExpenseCreate(ExpenseBase):
 
 
 class ExpenseUpdate(BaseModel):
-    amount: float | None = Field(default=None, gt=0)
-    category: str | None = None
-    description: str | None = None
-    date: datetime | None = None
+    amount: Optional[float] | None = Field(default=None, gt=0)
+    category: Optional[str] | None = None
+    description: Optional[str] | None = None
+    date: Optional[datetime] | None = None
 
 
 class ExpenseOut(ExpenseBase):
