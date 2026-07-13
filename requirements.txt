@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-pydantic
+pydantic[email]
 pydantic-settings
 python-jose[cryptography]
 argon2-cffi
@@ -9,3 +9,4 @@ passlib
 python-multipart
 python-dotenv
 aiofiles
+email-validator
