@@ -13,7 +13,6 @@ ecdsa==0.19.1
 email-validator==2.3.0
 fastapi==0.118.0
 greenlet==3.2.4
-gunicorn==26.0.0
 h11==0.16.0
 httpcore==1.0.9
 httpx==0.28.1
